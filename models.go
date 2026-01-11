@@ -15,3 +15,12 @@ type BankRecord struct {
 	Date	time.Time
 }
 
+type ReconSummary struct {
+	TotalProcessed		int
+	MatchedCount		int
+	UnmatchedCount		int
+	TotalDiscrepancy	int64			// Sum of absolute differences
+	SystemUnmatched		[]Transaction	// Missing in bank records
+	BankUnmatched		map[string][]BankRecord	// Missing in system records
+}
+
