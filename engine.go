@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"time"
 )
 
@@ -8,12 +9,11 @@ import (
 func Reconcile(systemTrxs []Transaction, bankRecords []BankRecord) *ReconSummary {
 	summary := &ReconSummary{
 		SystemUnmatched: []Transaction{},
-		BankUnmatched: make(map[string][]BankRecord),
+		BankUnmatched:   make(map[string][]BankRecord),
 	}
 
 	// Step 1: Index system transactions by a "Recon Key"
 	// Since BankIDs don't match system IDs, we match by Amount and Date
-	// in a real scenario, you'd use a more complex key lor a sliding date window
 	sysMap := make(map[string]Transaction)
 	for _, t := range systemTrxs {
 		key := generateKey(t.Amount, t.Time)
@@ -47,7 +47,7 @@ func Reconcile(systemTrxs []Transaction, bankRecords []BankRecord) *ReconSummary
 		summary.SystemUnmatched = append(summary.SystemUnmatched, t)
 		summary.UnmatchedCount++
 	}
-	
+
 	return summary
 }
 
