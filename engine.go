@@ -41,7 +41,14 @@ func Reconcile(systemTrxs []Transaction, bankRecords []BankRecord) *ReconSummary
 		}
 
 	}
+
+	// Step 3: Anything left in sysMap is missing from bank records
+	for _, t := range sysMap {
+		summary.SystemUnmatched = append(summary.SystemUnmatched, t)
+		summary.UnmatchedCount++
+	}
 	
+	return summary
 }
 
 // generateKey creates a unique string based on amount and date
