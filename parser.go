@@ -46,3 +46,41 @@ func ParseSystemCSV(filePath string) ([]Transaction, error) {
 	}
 	return transactions, nil
 }
+
+// Read bank statement data
+func ParseBankCSV(filePath string) ([]BankRecord, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("could not open bank file: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	if _, err := reader.Read(); err != nil {
+		return nil, err
+	}
+
+	var records []BankRecord
+	for {
+		line, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		// Capture Bank amount raw value
+		amtFloat, _ := strconv.ParseFloat(line[1], 64)
+
+		date, _ := time.Parse("2006-01-02", line[2])
+
+		records = append(records, BankRecord{
+			ID:     line[0],
+			Amount: int64(amtFloat),
+			Date:   date,
+		})
+	}
+
+	return records, nil
+}
