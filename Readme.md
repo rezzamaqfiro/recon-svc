@@ -58,20 +58,20 @@ go test -v .
 Use the CLI flags to specify your files.
 
 ```bash
-go run . -system=system.csv -bank=bank.csv
+go run . -system=system.csv -bank=bank_a.csv,bank_b.csv,bank_c.csv -start=2025-01-01 -end=2025-01-31
 ```
 
 You can also extend the time window by adding configurable parameter `default: 1 days`
 
 ```bash
-go run . -system=system.csv -bank=bank.csv -window=2
+go run . -system=system.csv -bank=bank_a.csv,bank_b.csv,bank_c.csv -start=2025-01-01 -end=2025-01-31 -window=2
 ```
 
 4. Build the Program
 By executing below script you can build the progam into executable files.
 
 ```bash
-go build -o recon-tool ./recon-tool -system=system.csv -bank=bank.csv
+go build -o recon-tool ./recon-tool -system=system.csv -bank=bank_a.csv,bank_b.csv,bank_c.csv -start=2025-01-01 -end=2025-01-31
 ```
 
 
