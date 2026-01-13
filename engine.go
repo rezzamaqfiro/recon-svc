@@ -8,45 +8,49 @@ import (
 
 // I use a map to Store system transactions for high speed lookups
 func Reconcile(systemTrxs []Transaction, bankRecords []BankRecord) *ReconSummary {
-	summary := &ReconSummary{
-		SystemUnmatched: []Transaction{},
-		BankUnmatched:   make(map[string][]BankRecord),
-	}
+	summary := &ReconSummary{BankUnmatched: make(map[string][]BankRecord)}
 
-	// Step 1: Index system transactions by a "Recon Key"
-	// Since BankIDs don't match system IDs, we match by Amount and Date
-	sysMap := make(map[string]Transaction)
+	sysDateMap := make(map[string][]Transaction)
 	for _, t := range systemTrxs {
-		key := generateKey(t.Amount, t.Time)
-		sysMap[key] = t
-		summary.TotalProcessed++
+		dateKey := t.Time.Format("2006-01-02")
+		sysDateMap[dateKey] = append(sysDateMap[dateKey], t)
 	}
 
-	// Step 2: itterate through bank records to find matches
 	for _, b := range bankRecords {
-		key := generateKey(b.Amount, b.Date)
+		summary.TotalProcessed++
+		dateKey := b.Date.Format("2006-01-02")
 
-		if sysTrx, found := sysMap[key]; found {
-			// SUCCESS: Match Found
-			summary.MatchedCount++
-			// Calcilate discrepancy if any (per requirements)
-			diff := int64(math.Abs(float64(sysTrx.Amount - b.Amount)))
-			summary.TotalDiscrepancy += diff
-
-			// Remove from map so we know what's left is unmatched
-			delete(sysMap, key)
-		} else {
-			// FAILURE: Bank Record no system equivalent
-			summary.BankUnmatched["Bank_A"] = append(summary.BankUnmatched["Bank_A"], b)
+		candidates, found := sysDateMap[dateKey]
+		if !found || len(candidates) == 0 {
 			summary.UnmatchedCount++
+			summary.BankUnmatched["Bank_A"] = append(summary.BankUnmatched["Bank_A"], b)
+			continue
 		}
 
+		// HEURISTIC
+		bestIndex := -1
+		var smallestDiff int64 = -1
+
+		for i, sysTrx := range candidates {
+			diff := int64(math.Abs(float64(sysTrx.Amount - b.Amount)))
+			if smallestDiff == -1 || diff < smallestDiff {
+				smallestDiff = diff
+				bestIndex = i
+			}
+		}
+
+		summary.MatchedCount++
+		summary.TotalDiscrepancy += smallestDiff
+
+		// Remove the matched system record so it's not used again
+		sysDateMap[dateKey] = append(candidates[:bestIndex], candidates[bestIndex+1:]...)
 	}
 
-	// Step 3: Anything left in sysMap is missing from bank records
-	for _, t := range sysMap {
-		summary.SystemUnmatched = append(summary.SystemUnmatched, t)
-		summary.UnmatchedCount++
+	for _, list := range sysDateMap {
+		for _, t := range list {
+			summary.UnmatchedCount++
+			summary.SystemUnmatched = append(summary.SystemUnmatched, t)
+		}
 	}
 
 	return summary
