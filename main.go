@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("System parse error: %v", err)
 	}
-	// Filter each bank file by date
+	// Filter each system file by date
 	filteredSys := FilterSystemByDate(sysTrxs, startDate, endDate)
 
 	var allBankRecs []BankRecord

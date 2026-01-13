@@ -20,17 +20,21 @@ Once a record is matched, it is "consumed" (removed from the candidate pool). Th
 ---
 
 ## 🛠 Project Structure
+
 ```text
-.
+recon-svc/
 ├── main.go          # CLI Entrypoint & Orchestration
 ├── engine.go        # Recon Process
 ├── parser.go        # CSV Ingestion
 ├── models.go        # Domain Data Structures
-└── engine_test.go   # Table-Driven Unit Tests
+├── engine_test.go   # Table-Driven Unit Tests
+└── cmd/
+    └── generator/
+        └── gen_data.go      # The 10k data generation tool
 ```
 
-🚀 How to Use
-1. Preparation
+## 🚀 How to Use
+### 1. Preparation
 Ensure you have provide your system.csv and bank.csv files in the root directory.
 
 OR
@@ -47,14 +51,14 @@ We can put our desire row data by put additional flag parameter `default: 10000 
 go run cmd/generator/gen_data.go -rows=100
 ```
 
-2. Running Detailed Tests
+### 2. Running Detailed Tests
 This project uses Table-Driven tests to cover edge cases like settlement lag and amount typos.
 
 ```bash
 go test -v .
 ```
 
-3. Running the Program
+### 3. Running the Program
 Use the CLI flags to specify your files.
 
 ```bash
@@ -67,7 +71,7 @@ You can also extend the time window by adding configurable parameter `default: 1
 go run . -system=system.csv -bank=bank_a.csv,bank_b.csv,bank_c.csv -start=2025-01-01 -end=2025-01-31 -window=2
 ```
 
-4. Build the Program
+### 4. Build the Program
 By executing below script you can build the progam into executable files.
 
 ```bash
