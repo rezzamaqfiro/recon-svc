@@ -69,3 +69,23 @@ func Reconcile(systemTrxs []Transaction, bankRecords []BankRecord, windowDays in
 func generateKey(amount int64, t time.Time) string {
 	return t.Format("2006-01-02") + "_" + strconv.FormatInt(amount, 10)
 }
+
+func FilterSystemByDate(trxs []Transaction, start, end time.Time) []Transaction {
+	var filtered []Transaction
+	for _, t := range trxs {
+		if (t.Time.After(start) || t.Time.Equal(start)) && (t.Time.Before(end) || t.Time.Equal(end)) {
+			filtered = append(filtered, t)
+		}
+	}
+	return filtered
+}
+
+func FilterBankByDate(recs []BankRecord, start, end time.Time) []BankRecord {
+	var filtered []BankRecord
+	for _, r := range recs {
+		if (r.Date.After(start) || r.Date.Equal(start)) && (r.Date.Before(end) || r.Date.Equal(end)) {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
+}
