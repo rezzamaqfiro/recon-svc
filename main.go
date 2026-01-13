@@ -1,25 +1,35 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
 )
 
 func main() {
-	sysData, err := ParseSystemCSV("internal_trxs.csv")
+	// Define flag for CLI
+	sysPath := flag.String("system", "", "Path to system transaction CSV")
+	bankPath := flag.String("bank", "", "Path to bank statement CSV")
+	flag.Parse()
+
+	if *sysPath == "" || *bankPath == "" {
+		log.Fatal("Please provide both -system and -bank file paths ")
+	}
+
+	sysTrxs, err := ParseSystemCSV(*sysPath)
 	if err != nil {
-		fmt.Printf("Error loading system data: %v\n", err)
-		return
+		log.Fatalf("System parse error: %v", err)
 	}
 
-	bankData, _ := ParseBankCSV("bank_records.csv")
-	summary := Reconcile(sysData, bankData)
-
-	fmt.Printf("--- Reconciliation Summary ---\n")
-	fmt.Printf("Total Processed: %d\n", summary.TotalProcessed)
-	fmt.Printf("Matched Count: %d\n", summary.MatchedCount)
-	fmt.Printf("Total Discrepancy: %d\n", summary.TotalDiscrepancy)
-
-	if summary.TotalDiscrepancy > 0 {
-		fmt.Printf("Total Amount Gap: Rp %.2f", float64(summary.TotalDiscrepancy)/100)
+	bankRecs, err := ParseBankCSV(*bankPath)
+	if err != nil {
+		log.Fatalf("Bank parse error: %v", err)
 	}
+
+	summary := Reconcile(sysTrxs, bankRecs)
+
+	fmt.Printf("--- AMARTHA RECONCILIATION REPORT ---\n")
+	fmt.Printf("Matched : %d\n", summary.MatchedCount)
+	fmt.Printf("Unmatched : %d\n", summary.UnmatchedCount)
+	fmt.Printf("Discrepancy Total: Rp.%d,-\n", summary.TotalDiscrepancy)
 }
