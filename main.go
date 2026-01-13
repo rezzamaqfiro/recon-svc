@@ -46,8 +46,44 @@ func main() {
 	}
 
 	summary := Reconcile(filteredSys, allBankRecs, *windowDays)
-	fmt.Printf("\n--- AMARTHA RECONCILIATION REPORT ---\n")
-	fmt.Printf("Matched : %d\n", summary.MatchedCount)
-	fmt.Printf("Unmatched : %d\n", summary.UnmatchedCount)
-	fmt.Printf("Discrepancy Total: Rp.%d,-\n", summary.TotalDiscrepancy)
+	fmt.Println("==========================================")
+	fmt.Println("       AMARTHA RECONCILIATION REPORT       ")
+	fmt.Println("==========================================")
+	fmt.Printf("Total Processed:     %d\n", summary.TotalProcessed)
+	fmt.Printf("Matched:             %d\n", summary.MatchedCount)
+	fmt.Printf("Unmatched:           %d\n", summary.UnmatchedCount)
+	fmt.Printf("Total Discrepancy:   Rp %d\n", summary.TotalDiscrepancy)
+	fmt.Println("------------------------------------------")
+
+	fmt.Println("\n MISSING IN BANK (Internal Records)")
+	if len(summary.SystemUnmatched) == 0 {
+		fmt.Println("      None - All system records found in bank.")
+	} else {
+		for i, trx := range summary.SystemUnmatched {
+			if i >= 25 {
+				fmt.Printf("      ... and %d more items\n", len(summary.SystemUnmatched)-25)
+				break
+			}
+			fmt.Printf("      - ID: %-10s | Amt: %-10d | Date: %s\n",
+				trx.TrxID, trx.Amount, trx.Time.Format("2006-01-02"))
+		}
+	}
+
+	fmt.Println("\n MISSING IN SYSTEM (Bank Records)")
+	if len(summary.BankUnmatched) == 0 {
+		fmt.Println("      None - All bank records found in system.")
+	} else {
+		for bankName, records := range summary.BankUnmatched {
+			fmt.Printf("      Bank: %s\n", bankName)
+			for i, rec := range records {
+				if i >= 25 {
+					fmt.Printf("            ... and %d more items\n", len(records)-25)
+					break
+				}
+				fmt.Printf("            - Ref: %-10s | Amt: %-10d | Date: %s\n",
+					rec.ID, rec.Amount, rec.Date.Format("2006-01-02"))
+			}
+		}
+	}
+	fmt.Println("==========================================")
 }
