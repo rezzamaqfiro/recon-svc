@@ -17,18 +17,23 @@ func main() {
 	startDate := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	sysFile, _ := os.Create("system.csv")
-	bankFile, _ := os.Create("bank.csv")
 	defer sysFile.Close()
-	defer bankFile.Close()
-
 	sysWriter := csv.NewWriter(sysFile)
-	bankWriter := csv.NewWriter(bankFile)
-	defer sysWriter.Flush()
-	defer bankWriter.Flush()
-
 	// Headers
 	sysWriter.Write([]string{"TrxID", "Amount", "Type", "TransactionTime"})
-	bankWriter.Write([]string{"UID", "Amount", "Date"})
+
+	bankFiles := []*os.File{}
+	bankWriters := []*csv.Writer{}
+	bankNames := []string{"bank_a.csv", "bank_b.csv", "bank_c.csv"}
+
+	for _, name := range bankNames {
+		f, _ := os.Create(name)
+		bankFiles = append(bankFiles, f)
+		w := csv.NewWriter(f)
+		// Headers
+		w.Write([]string{"unique_identifier", "amount", "date"})
+		bankWriters = append(bankWriters, w)
+	}
 
 	for i := 0; i < *totalRows; i++ {
 		amount := int64(rand.Intn(1000000) + 1000)
@@ -43,27 +48,24 @@ func main() {
 
 		// variability in bank record
 		dice := rand.Float64()
-		if dice < 0.85 {
-			settleDate := trxTime.AddDate(0, 0, rand.Intn(2))
-			bankWriter.Write([]string{
-				fmt.Sprintf("BANK_%d", i),
+		if dice < 0.90 {
+			// Randomly pick Bank A, B, or C
+			bankIndex := rand.Intn(3)
+
+			bankWriters[bankIndex].Write([]string{
+				fmt.Sprintf("REF_%d", i),
 				strconv.FormatInt(amount, 10),
-				settleDate.Format("2006-01-02"),
-			})
-		} else if dice < 0.95 {
-			diff := int64(rand.Intn(500) + 1)
-			bankWriter.Write([]string{
-				fmt.Sprintf("BANK_ERR_%d", i),
-				strconv.FormatInt(amount+diff, 10),
 				trxTime.Format("2006-01-02"),
 			})
-		} else {
-			// skip to simulate missing record
 		}
 	}
 
 	sysWriter.Flush()
-	bankWriter.Flush()
-	fmt.Printf("\nGenerated %d rows of test data successfully.\n", *totalRows)
+	for i, w := range bankWriters {
+		w.Flush()
+		bankFiles[i].Close()
+	}
+
+	fmt.Printf("\nSuccessfully generated  %d rows of test data system files (system.csv) and 3 bank files (bank_a.csv, bank_b.csv, bank_c.csv).\n", *totalRows)
 
 }
