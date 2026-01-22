@@ -47,7 +47,7 @@ func main() {
 
 	summary := Reconcile(filteredSys, allBankRecs, *windowDays)
 	fmt.Println("==========================================")
-	fmt.Println("       AMARTHA RECONCILIATION REPORT       ")
+	fmt.Println("       COMPANY RECONCILIATION REPORT       ")
 	fmt.Println("==========================================")
 	fmt.Printf("Total Processed:     %d\n", summary.TotalProcessed)
 	fmt.Printf("Matched:             %d\n", summary.MatchedCount)
